@@ -9,8 +9,6 @@ import {
 } from './type'
 import YAML from 'js-yaml'
 
-export const one = 1
-export const two = 2
 export const parse = (input: string): AST => {
   const nodes: Node[] = []
 

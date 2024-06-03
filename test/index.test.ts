@@ -1,12 +1,20 @@
 import { describe, it, expect } from 'bun:test'
-import { one, two } from '../src'
+import { parse } from '../src'
+import { readdir } from 'node:fs/promises'
+import { join } from 'node:path'
 
-describe('should', () => {
-  it('export 1', () => {
-    expect(one).toBe(1)
-  })
-
-  it('export 2', () => {
-    expect(two).toBe(2)
-  })
+describe('correctly parse', async () => {
+  const testFolder = join(__dirname, 'testcases')
+  const folders = await readdir(testFolder)
+  for (const folder of folders) {
+    it(`${folder}`, async () => {
+      const source = Bun.file(join(testFolder, folder, 'source.md'))
+      const expected = Bun.file(join(testFolder, folder, 'expected.json'))
+      const sourceText = await source.text()
+      const expectedText = await expected.text()
+      const parsed = parse(sourceText)
+      const expectedParsed = JSON.parse(expectedText)
+      expect(parsed).toEqual(expectedParsed)
+    })
+  }
 })
