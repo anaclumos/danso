@@ -1,0 +1,874 @@
+{
+	"nodes": [
+		{
+			"type": "frontmatter",
+			"attributes": {
+				"title": "React 19 RC",
+				"author": "The React Team",
+				"date": "2024/04/25",
+				"description": "React 19 RC is now available on npm! In this post, we'll give an overview of the new features in React 19, and how you can adopt them."
+			}
+		},
+		{
+			"type": "paragraph",
+			"content": "April 25, 2024 by [The React Team](/community/team)"
+		},
+		{
+			"type": "paragraph",
+			"content": "---"
+		},
+		{
+			"type": "tag",
+			"name": "Intro",
+			"attributes": {},
+			"children": [
+				{
+					"type": "paragraph",
+					"content": "React 19 RC is now available on npm!"
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": "In our [React 19 RC Upgrade Guide](/blog/2024/04/25/react-19-upgrade-guide), we shared step-by-step instructions for upgrading your app to React 19. In this post, we'll give an overview of the new features in React 19, and how you can adopt them."
+		},
+		{
+			"type": "paragraph",
+			"content": "- [What's new in React 19](#whats-new-in-react-19)\n- [Improvements in React 19](#improvements-in-react-19)\n- [How to upgrade](#how-to-upgrade)"
+		},
+		{
+			"type": "paragraph",
+			"content": "For a list of breaking changes, see the [Upgrade Guide](/blog/2024/04/25/react-19-upgrade-guide)."
+		},
+		{
+			"type": "paragraph",
+			"content": "---"
+		},
+		{
+			"type": "paragraph",
+			"content": "## What's new in React 19 {/*whats-new-in-react-19*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "### Actions {/*actions*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "A common use case in React apps is to perform a data mutation and then update state in response. For example, when a user submits a form to change their name, you will make an API request, and then handle the response. In the past, you would need to handle pending states, errors, optimistic updates, and sequential requests manually."
+		},
+		{
+			"type": "paragraph",
+			"content": "For example, you could handle the pending and error state in `useState`:"
+		},
+		{
+			"type": "code",
+			"metadataString": "js",
+			"content": "// Before Actions\nfunction UpdateName({}) {\n  const [name, setName] = useState(\"\");\n  const [error, setError] = useState(null);\n  const [isPending, setIsPending] = useState(false);\n\n  const handleSubmit = async () => {\n    setIsPending(true);\n    const error = await updateName(name);\n    setIsPending(false);\n    if (error) {\n      setError(error);\n      return;\n    } \n    redirect(\"/path\");\n  };\n\n  return (\n    <div>\n      <input value={name} onChange={(event) => setName(event.target.value)} />\n      <button onClick={handleSubmit} disabled={isPending}>\n        Update\n      </button>\n      {error && <p>{error}</p>}\n    </div>\n  );\n}"
+		},
+		{
+			"type": "paragraph",
+			"content": "In React 19, we're adding support for using async functions in transitions to handle pending states, errors, forms, and optimistic updates automatically."
+		},
+		{
+			"type": "paragraph",
+			"content": "For example, you can use `useTransition` to handle the pending state for you:"
+		},
+		{
+			"type": "code",
+			"metadataString": "js",
+			"content": "// Using pending state from Actions\nfunction UpdateName({}) {\n  const [name, setName] = useState(\"\");\n  const [error, setError] = useState(null);\n  const [isPending, startTransition] = useTransition();\n\n  const handleSubmit = () => {\n    startTransition(async () => {\n      const error = await updateName(name);\n      if (error) {\n        setError(error);\n        return;\n      } \n      redirect(\"/path\");\n    })\n  };\n\n  return (\n    <div>\n      <input value={name} onChange={(event) => setName(event.target.value)} />\n      <button onClick={handleSubmit} disabled={isPending}>\n        Update\n      </button>\n      {error && <p>{error}</p>}\n    </div>\n  );\n}"
+		},
+		{
+			"type": "paragraph",
+			"content": "The async transition will immediately set the `isPending` state to true, make the async request(s), and switch `isPending` to false after any transitions. This allows you to keep the current UI responsive and interactive while the data is changing."
+		},
+		{
+			"type": "tag",
+			"name": "Note",
+			"attributes": {},
+			"children": [
+				{
+					"type": "paragraph",
+					"content": "#### By convention, functions that use async transitions are called \"Actions\". {/*by-convention-functions-that-use-async-transitions-are-called-actions*/}"
+				},
+				{
+					"type": "paragraph",
+					"content": "Actions automatically manage submitting data for you:"
+				},
+				{
+					"type": "paragraph",
+					"content": "- **Pending state**: Actions provide a pending state that starts at the beginning of a request and automatically resets when the final state update is committed.\n- **Optimistic updates**: Actions support the new [`useOptimistic`](#new-hook-optimistic-updates) hook so you can show users instant feedback while the requests are submitting.\n- **Error handling**: Actions provide error handling so you can display Error Boundaries when a request fails, and revert optimistic updates to their original value automatically.\n- **Forms**: `<form>` elements now support passing functions to the `action` and `formAction` props. Passing functions to the `action` props use Actions by default and reset the form automatically after submission."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": "Building on top of Actions, React 19 introduces [`useOptimistic`](#new-hook-optimistic-updates) to manage optimistic updates, and a new hook [`React.useActionState`](#new-hook-useactionstate) to handle common cases for Actions. In `react-dom` we're adding [`<form>` Actions](#form-actions) to manage forms automatically and [`useFormStatus`](#new-hook-useformstatus) to support the common cases for Actions in forms."
+		},
+		{
+			"type": "paragraph",
+			"content": "In React 19, the above example can be simplified to:"
+		},
+		{
+			"type": "code",
+			"metadataString": "js",
+			"content": "// Using <form> Actions and useActionState\nfunction ChangeName({ name, setName }) {\n  const [error, submitAction, isPending] = useActionState(\n    async (previousState, formData) => {\n      const error = await updateName(formData.get(\"name\"));\n      if (error) {\n        return error;\n      }\n      redirect(\"/path\");\n      return null;\n    },\n    null,\n  );\n\n  return (\n    <form action={submitAction}>\n      <input type=\"text\" name=\"name\" />\n      <button type=\"submit\" disabled={isPending}>Update</button>\n      {error && <p>{error}</p>}\n    </form>\n  );\n}"
+		},
+		{
+			"type": "paragraph",
+			"content": "In the next section, we'll break down each of the new Action features in React 19."
+		},
+		{
+			"type": "paragraph",
+			"content": "### New hook: `useActionState` {/*new-hook-useactionstate*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "To make the common cases easier for Actions, we've added a new hook called `useActionState`:"
+		},
+		{
+			"type": "code",
+			"metadataString": "js",
+			"content": "const [error, submitAction, isPending] = useActionState(\n  async (previousState, newName) => {\n    const error = await updateName(newName);\n    if (error) {\n      // You can return any result of the action.\n      // Here, we return only the error.\n      return error;\n    }\n\n    // handle success\n    return null;\n  },\n  null,\n);"
+		},
+		{
+			"type": "paragraph",
+			"content": "`useActionState` accepts a function (the \"Action\"), and returns a wrapped Action to call. This works because Actions compose. When the wrapped Action is called, `useActionState` will return the last result of the Action as `data`, and the pending state of the Action as `pending`."
+		},
+		{
+			"type": "tag",
+			"name": "Note",
+			"attributes": {},
+			"children": [
+				{
+					"type": "paragraph",
+					"content": "`React.useActionState` was previously called `ReactDOM.useFormState` in the Canary releases, but we've renamed it and deprecated `useFormState`."
+				},
+				{
+					"type": "paragraph",
+					"content": "See [#28491](https://github.com/facebook/react/pull/28491) for more info."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": "For more information, see the docs for [`useActionState`](/reference/react/useActionState)."
+		},
+		{
+			"type": "paragraph",
+			"content": "### React DOM: `<form>` Actions {/*form-actions*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "Actions are also integrated with React 19's new `<form>` features for `react-dom`. We've added support for passing functions as the `action` and `formAction` props of `<form>`, `<input>`, and `<button>` elements to automatically submit forms with Actions:"
+		},
+		{
+			"type": "code",
+			"metadataString": "js [[1,1,\"actionFunction\"]]",
+			"content": "<form action={actionFunction}>"
+		},
+		{
+			"type": "paragraph",
+			"content": "When a `<form>` Action succeeds, React will automatically reset the form for uncontrolled components. If you need to reset the `<form>` manually, you can call the new `requestFormReset` React DOM API."
+		},
+		{
+			"type": "paragraph",
+			"content": "For more information, see the `react-dom` docs for [`<form>`](/reference/react-dom/components/form), [`<input>`](/reference/react-dom/components/input), and `<button>`."
+		},
+		{
+			"type": "paragraph",
+			"content": "### React DOM: New hook: `useFormStatus` {/*new-hook-useformstatus*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "In design systems, it's common to write design components that need access to information about the `<form>` they're in, without drilling props down to the component. This can be done via Context, but to make the common case easier, we've added a new hook `useFormStatus`:"
+		},
+		{
+			"type": "code",
+			"metadataString": "js [[1, 4, \"pending\"], [1, 5, \"pending\"]]",
+			"content": "import {useFormStatus} from 'react-dom';\n\nfunction DesignButton() {\n  const {pending} = useFormStatus();\n  return <button type=\"submit\" disabled={pending} />\n}"
+		},
+		{
+			"type": "paragraph",
+			"content": "`useFormStatus` reads the status of the parent `<form>` as if the form was a Context provider."
+		},
+		{
+			"type": "paragraph",
+			"content": "For more information, see the `react-dom` docs for [`useFormStatus`](/reference/react-dom/hooks/useFormStatus)."
+		},
+		{
+			"type": "paragraph",
+			"content": "### New hook: `useOptimistic` {/*new-hook-optimistic-updates*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "Another common UI pattern when performing a data mutation is to show the final state optimistically while the async request is underway. In React 19, we're adding a new hook called `useOptimistic` to make this easier:"
+		},
+		{
+			"type": "code",
+			"metadataString": "js {2,6,13,19}",
+			"content": "function ChangeName({currentName, onUpdateName}) {\n  const [optimisticName, setOptimisticName] = useOptimistic(currentName);\n\n  const submitAction = async formData => {\n    const newName = formData.get(\"name\");\n    setOptimisticName(newName);\n    const updatedName = await updateName(newName);\n    onUpdateName(updatedName);\n  };\n\n  return (\n    <form action={submitAction}>\n      <p>Your name is: {optimisticName}</p>\n      <p>\n        <label>Change Name:</label>\n        <input\n          type=\"text\"\n          name=\"name\"\n          disabled={currentName !== optimisticName}\n        />\n      </p>\n    </form>\n  );\n}"
+		},
+		{
+			"type": "paragraph",
+			"content": "The `useOptimistic` hook will immediately render the `optimisticName` while the `updateName` request is in progress. When the update finishes or errors, React will automatically switch back to the `currentName` value."
+		},
+		{
+			"type": "paragraph",
+			"content": "For more information, see the docs for [`useOptimistic`](/reference/react/useOptimistic)."
+		},
+		{
+			"type": "paragraph",
+			"content": "### New API: `use` {/*new-feature-use*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "In React 19 we're introducing a new API to read resources in render: `use`."
+		},
+		{
+			"type": "paragraph",
+			"content": "For example, you can read a promise with `use`, and React will Suspend until the promise resolves:"
+		},
+		{
+			"type": "code",
+			"metadataString": "js {1,5}",
+			"content": "import {use} from 'react';\n\nfunction Comments({commentsPromise}) {\n  // `use` will suspend until the promise resolves.\n  const comments = use(commentsPromise);\n  return comments.map(comment => <p key={comment.id}>{comment}</p>);\n}\n\nfunction Page({commentsPromise}) {\n  // When `use` suspends in Comments,\n  // this Suspense boundary will be shown.\n  return (\n    <Suspense fallback={<div>Loading...</div>}>\n      <Comments commentsPromise={commentsPromise} />\n    </Suspense>\n  )\n}"
+		},
+		{
+			"type": "tag",
+			"name": "Note",
+			"attributes": {},
+			"children": [
+				{
+					"type": "paragraph",
+					"content": "#### `use` does not support promises created in render. {/*use-does-not-support-promises-created-in-render*/}"
+				},
+				{
+					"type": "paragraph",
+					"content": "If you try to pass a promise created in render to `use`, React will warn:"
+				},
+				{
+					"type": "tag",
+					"name": "ConsoleBlockMulti",
+					"attributes": {},
+					"children": [
+						{
+							"type": "tag",
+							"name": "ConsoleLogLine",
+							"attributes": {
+								"level": "error"
+							},
+							"children": [
+								{
+									"type": "paragraph",
+									"content": "A component was suspended by an uncached promise. Creating promises inside a Client Component or hook is not yet supported, except via a Suspense-compatible library or framework."
+								}
+							]
+						}
+					]
+				},
+				{
+					"type": "paragraph",
+					"content": "To fix, you need to pass a promise from a suspense powered library or framework that supports caching for promises. In the future we plan to ship features to make it easier to cache promises in render."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": "You can also read context with `use`, allowing you to read Context conditionally such as after early returns:"
+		},
+		{
+			"type": "code",
+			"metadataString": "js {1,11}",
+			"content": "import {use} from 'react';\nimport ThemeContext from './ThemeContext'\n\nfunction Heading({children}) {\n  if (children == null) {\n    return null;\n  }\n  \n  // This would not work with useContext\n  // because of the early return.\n  const theme = use(ThemeContext);\n  return (\n    <h1 style={{color: theme.color}}>\n      {children}\n    </h1>\n  );\n}"
+		},
+		{
+			"type": "paragraph",
+			"content": "The `use` API can only be called in render, similar to hooks. Unlike hooks, `use` can be called conditionally. In the future we plan to support more ways to consume resources in render with `use`."
+		},
+		{
+			"type": "paragraph",
+			"content": "For more information, see the docs for [`use`](/reference/react/use)."
+		},
+		{
+			"type": "paragraph",
+			"content": "## React Server Components {/*react-server-components*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "### Server Components {/*server-components*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "Server Components are a new option that allows rendering components ahead of time, before bundling, in an environment separate from your client application or SSR server. This separate environment is the \"server\" in React Server Components. Server Components can run once at build time on your CI server, or they can be run for each request using a web server."
+		},
+		{
+			"type": "paragraph",
+			"content": "React 19 includes all of the React Server Components features included from the Canary channel. This means libraries that ship with Server Components can now target React 19 as a peer dependency with a `react-server` [export condition](https://github.com/reactjs/rfcs/blob/main/text/0227-server-module-conventions.md#react-server-conditional-exports) for use in frameworks that support the [Full-stack React Architecture](/learn/start-a-new-react-project#which-features-make-up-the-react-teams-full-stack-architecture-vision)."
+		},
+		{
+			"type": "tag",
+			"name": "Note",
+			"attributes": {},
+			"children": [
+				{
+					"type": "paragraph",
+					"content": "#### How do I build support for Server Components? {/*how-do-i-build-support-for-server-components*/}"
+				},
+				{
+					"type": "paragraph",
+					"content": "While React Server Components in React 19 are stable and will not break between major versions, the underlying APIs used to implement a React Server Components bundler or framework do not follow semver and may break between minors in React 19.x."
+				},
+				{
+					"type": "paragraph",
+					"content": "To support React Server Components as a bundler or framework, we recommend pinning to a specific React version, or using the Canary release. We will continue working with bundlers and frameworks to stabilize the APIs used to implement React Server Components in the future."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": "For more, see the docs for [React Server Components](/reference/rsc/server-components)."
+		},
+		{
+			"type": "paragraph",
+			"content": "### Server Actions {/*server-actions*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "Server Actions allow Client Components to call async functions executed on the server."
+		},
+		{
+			"type": "paragraph",
+			"content": "When a Server Action is defined with the `\"use server\"` directive, your framework will automatically create a reference to the server function, and pass that reference to the Client Component. When that function is called on the client, React will send a request to the server to execute the function, and return the result."
+		},
+		{
+			"type": "tag",
+			"name": "Note",
+			"attributes": {},
+			"children": [
+				{
+					"type": "paragraph",
+					"content": "#### There is no directive for Server Components. {/*there-is-no-directive-for-server-components*/}"
+				},
+				{
+					"type": "paragraph",
+					"content": "A common misunderstanding is that Server Components are denoted by `\"use server\"`, but there is no directive for Server Components. The `\"use server\"` directive is used for Server Actions."
+				},
+				{
+					"type": "paragraph",
+					"content": "For more info, see the docs for [Directives](/reference/rsc/directives)."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": "Server Actions can be created in Server Components and passed as props to Client Components, or they can be imported and used in Client Components."
+		},
+		{
+			"type": "paragraph",
+			"content": "For more, see the docs for [React Server Actions](/reference/rsc/server-actions)."
+		},
+		{
+			"type": "paragraph",
+			"content": "## Improvements in React 19 {/*improvements-in-react-19*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "### `ref` as a prop {/*ref-as-a-prop*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "Starting in React 19, you can now access `ref` as a prop for function components:"
+		},
+		{
+			"type": "code",
+			"metadataString": "js [[1, 1, \"ref\"], [1, 2, \"ref\", 45], [1, 6, \"ref\", 14]]",
+			"content": "function MyInput({placeholder, ref}) {\n  return <input placeholder={placeholder} ref={ref} />\n}\n\n//...\n<MyInput ref={ref} />"
+		},
+		{
+			"type": "paragraph",
+			"content": "New function components will no longer need `forwardRef`, and we will be publishing a codemod to automatically update your components to use the new `ref` prop. In future versions we will deprecate and remove `forwardRef`."
+		},
+		{
+			"type": "tag",
+			"name": "Note",
+			"attributes": {},
+			"children": [
+				{
+					"type": "paragraph",
+					"content": "`refs` passed to classes are not passed as props since they reference the component instance."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": "### Diffs for hydration errors {/*diffs-for-hydration-errors*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "We also improved error reporting for hydration errors in `react-dom`. For example, instead of logging multiple errors in DEV without any information about the mismatch:"
+		},
+		{
+			"type": "tag",
+			"name": "ConsoleBlockMulti",
+			"attributes": {},
+			"children": [
+				{
+					"type": "tag",
+					"name": "ConsoleLogLine",
+					"attributes": {
+						"level": "error"
+					},
+					"children": [
+						{
+							"type": "paragraph",
+							"content": "Warning: Text content did not match. Server: \"Server\" Client: \"Client\"\n{'  '}at span\n{'  '}at App"
+						}
+					]
+				},
+				{
+					"type": "tag",
+					"name": "ConsoleLogLine",
+					"attributes": {
+						"level": "error"
+					},
+					"children": [
+						{
+							"type": "paragraph",
+							"content": "Warning: An error occurred during hydration. The server HTML was replaced with client content in \\<div\\>."
+						}
+					]
+				},
+				{
+					"type": "tag",
+					"name": "ConsoleLogLine",
+					"attributes": {
+						"level": "error"
+					},
+					"children": [
+						{
+							"type": "paragraph",
+							"content": "Warning: Text content did not match. Server: \"Server\" Client: \"Client\"\n{'  '}at span\n{'  '}at App"
+						}
+					]
+				},
+				{
+					"type": "tag",
+					"name": "ConsoleLogLine",
+					"attributes": {
+						"level": "error"
+					},
+					"children": [
+						{
+							"type": "paragraph",
+							"content": "Warning: An error occurred during hydration. The server HTML was replaced with client content in \\<div\\>."
+						}
+					]
+				},
+				{
+					"type": "tag",
+					"name": "ConsoleLogLine",
+					"attributes": {
+						"level": "error"
+					},
+					"children": [
+						{
+							"type": "paragraph",
+							"content": "Uncaught Error: Text content does not match server-rendered HTML.\n{'  '}at checkForUnmatchedText\n{'  '}..."
+						}
+					]
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": "We now log a single message with a diff of the mismatch:"
+		},
+		{
+			"type": "tag",
+			"name": "ConsoleBlockMulti",
+			"attributes": {},
+			"children": [
+				{
+					"type": "tag",
+					"name": "ConsoleLogLine",
+					"attributes": {
+						"level": "error"
+					},
+					"children": [
+						{
+							"type": "paragraph",
+							"content": "Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if an SSR-ed Client Component used:{'\\n'}\n\\- A server/client branch `if (typeof window !== 'undefined')`.\n\\- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n\\- Date formatting in a user's locale which doesn't match the server.\n\\- External changing data without sending a snapshot of it along with the HTML.\n\\- Invalid HTML tag nesting.{'\\n'}\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.{'\\n'}\nhttps://react.dev/link/hydration-mismatch {'\\n'}\n{'  '}\\<App\\>\n{'    '}\\<span\\>\n{'+    '}Client\n{'-    '}Server{'\\n'}\n{'  '}at throwOnHydrationMismatch\n{'  '}..."
+						}
+					]
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": "### `<Context>` as a provider {/*context-as-a-provider*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "In React 19, you can render `<Context>` as a provider instead of `<Context.Provider>`:"
+		},
+		{
+			"type": "code",
+			"metadataString": "js {5,7}",
+			"content": "const ThemeContext = createContext('');\n\nfunction App({children}) {\n  return (\n    <ThemeContext value=\"dark\">\n      {children}\n    </ThemeContext>\n  );  \n}"
+		},
+		{
+			"type": "paragraph",
+			"content": "New Context providers can use `<Context>` and we will be publishing a codemod to convert existing providers. In future versions we will deprecate `<Context.Provider>`."
+		},
+		{
+			"type": "paragraph",
+			"content": "### Cleanup functions for refs {/*cleanup-functions-for-refs*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "We now support returning a cleanup function from `ref` callbacks:"
+		},
+		{
+			"type": "code",
+			"metadataString": "js {7-9}",
+			"content": "<input\n  ref={(ref) => {\n    // ref created\n\n    // NEW: return a cleanup function to reset\n    // the ref when element is removed from DOM.\n    return () => {\n      // ref cleanup\n    };\n  }}\n/>"
+		},
+		{
+			"type": "paragraph",
+			"content": "When the component unmounts, React will call the cleanup function returned from the `ref` callback. This works for DOM refs, refs to class components, and `useImperativeHandle`."
+		},
+		{
+			"type": "tag",
+			"name": "Note",
+			"attributes": {},
+			"children": [
+				{
+					"type": "paragraph",
+					"content": "Previously, React would call `ref` functions with `null` when unmounting the component. If your `ref` returns a cleanup function, React will now skip this step."
+				},
+				{
+					"type": "paragraph",
+					"content": "In future versions, we will deprecate calling refs with `null` when unmounting components."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": "Due to the introduction of ref cleanup functions, returning anything else from a `ref` callback will now be rejected by TypeScript. The fix is usually to stop using implicit returns, for example:"
+		},
+		{
+			"type": "code",
+			"metadataString": "diff [[1, 1, \"(\"], [1, 1, \")\"], [2, 2, \"{\", 15], [2, 2, \"}\", 1]]",
+			"content": "- <div ref={current => (instance = current)} />\n+ <div ref={current => {instance = current}} />"
+		},
+		{
+			"type": "paragraph",
+			"content": "The original code returned the instance of the `HTMLDivElement` and TypeScript wouldn't know if this was _supposed_ to be a cleanup function or if you didn't want to return a cleanup function."
+		},
+		{
+			"type": "paragraph",
+			"content": "You can codemod this pattern with [`no-implicit-ref-callback-return`](https://github.com/eps1lon/types-react-codemod/#no-implicit-ref-callback-return)."
+		},
+		{
+			"type": "paragraph",
+			"content": "### `useDeferredValue` initial value {/*use-deferred-value-initial-value*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "We've added an `initialValue` option to `useDeferredValue`:"
+		},
+		{
+			"type": "code",
+			"metadataString": "js [[1, 1, \"deferredValue\"], [1, 4, \"deferredValue\"], [2, 4, \"''\"]]",
+			"content": "function Search({deferredValue}) {\n  // On initial render the value is ''.\n  // Then a re-render is scheduled with the deferredValue.\n  const value = useDeferredValue(deferredValue, '');\n  \n  return (\n    <Results query={value} />\n  );\n}"
+		},
+		{
+			"type": "paragraph",
+			"content": "`"
+		},
+		{
+			"type": "paragraph",
+			"content": "When <CodeStep step={2}>initialValue</CodeStep> is provided, `useDeferredValue` will return it as `value` for the initial render of the component, and schedules a re-render in the background with the <CodeStep step={1}>deferredValue</CodeStep> returned."
+		},
+		{
+			"type": "paragraph",
+			"content": "For more, see [`useDeferredValue`](/reference/react/useDeferredValue)."
+		},
+		{
+			"type": "paragraph",
+			"content": "### Support for Document Metadata {/*support-for-metadata-tags*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "In HTML, document metadata tags like `<title>`, `<link>`, and `<meta>` are reserved for placement in the `<head>` section of the document. In React, the component that decides what metadata is appropriate for the app may be very far from the place where you render the `<head>` or React does not render the `<head>` at all. In the past, these elements would need to be inserted manually in an effect, or by libraries like [`react-helmet`](https://github.com/nfl/react-helmet), and required careful handling when server rendering a React application."
+		},
+		{
+			"type": "paragraph",
+			"content": "In React 19, we're adding support for rendering document metadata tags in components natively:"
+		},
+		{
+			"type": "code",
+			"metadataString": "js {5-8}",
+			"content": "function BlogPost({post}) {\n  return (\n    <article>\n      <h1>{post.title}</h1>\n      <title>{post.title}</title>\n      <meta name=\"author\" content=\"Josh\" />\n      <link rel=\"author\" href=\"https://twitter.com/joshcstory/\" />\n      <meta name=\"keywords\" content={post.keywords} />\n      <p>\n        Eee equals em-see-squared...\n      </p>\n    </article>\n  );\n}"
+		},
+		{
+			"type": "paragraph",
+			"content": "When React renders this component, it will see the `<title>` `<link>` and `<meta>` tags, and automatically hoist them to the `<head>` section of document. By supporting these metadata tags natively, we're able to ensure they work with client-only apps, streaming SSR, and Server Components."
+		},
+		{
+			"type": "tag",
+			"name": "Note",
+			"attributes": {},
+			"children": [
+				{
+					"type": "paragraph",
+					"content": "#### You may still want a Metadata library {/*you-may-still-want-a-metadata-library*/}"
+				},
+				{
+					"type": "paragraph",
+					"content": "For simple use cases, rendering Document Metadata as tags may be suitable, but libraries can offer more powerful features like overriding generic metadata with specific metadata based on the current route. These features make it easier for frameworks and libraries like [`react-helmet`](https://github.com/nfl/react-helmet) to support metadata tags, rather than replace them."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": "For more info, see the docs for [`<title>`](/reference/react-dom/components/title), [`<link>`](/reference/react-dom/components/link), and [`<meta>`](/reference/react-dom/components/meta)."
+		},
+		{
+			"type": "paragraph",
+			"content": "### Support for stylesheets {/*support-for-stylesheets*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "Stylesheets, both externally linked (`<link rel=\"stylesheet\" href=\"...\">`) and inline (`<style>...</style>`), require careful positioning in the DOM due to style precedence rules. Building a stylesheet capability that allows for composability within components is hard, so users often end up either loading all of their styles far from the components that may depend on them, or they use a style library which encapsulates this complexity."
+		},
+		{
+			"type": "paragraph",
+			"content": "In React 19, we're addressing this complexity and providing even deeper integration into Concurrent Rendering on the Client and Streaming Rendering on the Server with built in support for stylesheets. If you tell React the `precedence` of your stylesheet it will manage the insertion order of the stylesheet in the DOM and ensure that the stylesheet (if external) is loaded before revealing content that depends on those style rules."
+		},
+		{
+			"type": "code",
+			"metadataString": "js {4,5,17}",
+			"content": "function ComponentOne() {\n  return (\n    <Suspense fallback=\"loading...\">\n      <link rel=\"stylesheet\" href=\"foo\" precedence=\"default\" />\n      <link rel=\"stylesheet\" href=\"bar\" precedence=\"high\" />\n      <article class=\"foo-class bar-class\">\n        {...}\n      </article>\n    </Suspense>\n  )\n}\n\nfunction ComponentTwo() {\n  return (\n    <div>\n      <p>{...}</p>\n      <link rel=\"stylesheet\" href=\"baz\" precedence=\"default\" />  <-- will be inserted between foo & bar\n    </div>\n  )\n}"
+		},
+		{
+			"type": "paragraph",
+			"content": "During Server Side Rendering React will include the stylesheet in the `<head>`, which ensures that the browser will not paint until it has loaded. If the stylesheet is discovered late after we've already started streaming, React will ensure that the stylesheet is inserted into the `<head>` on the client before revealing the content of a Suspense boundary that depends on that stylesheet."
+		},
+		{
+			"type": "paragraph",
+			"content": "During Client Side Rendering React will wait for newly rendered stylesheets to load before committing the render. If you render this component from multiple places within your application React will only include the stylesheet once in the document:"
+		},
+		{
+			"type": "code",
+			"metadataString": "js {5}",
+			"content": "function App() {\n  return <>\n    <ComponentOne />\n    ...\n    <ComponentOne /> // won't lead to a duplicate stylesheet link in the DOM\n  </>\n}"
+		},
+		{
+			"type": "paragraph",
+			"content": "For users accustomed to loading stylesheets manually this is an opportunity to locate those stylesheets alongside the components that depend on them allowing for better local reasoning and an easier time ensuring you only load the stylesheets that you actually depend on."
+		},
+		{
+			"type": "paragraph",
+			"content": "Style libraries and style integrations with bundlers can also adopt this new capability so even if you don't directly render your own stylesheets, you can still benefit as your tools are upgraded to use this feature."
+		},
+		{
+			"type": "paragraph",
+			"content": "For more details, read the docs for [`<link>`](/reference/react-dom/components/link) and [`<style>`](/reference/react-dom/components/style)."
+		},
+		{
+			"type": "paragraph",
+			"content": "### Support for async scripts {/*support-for-async-scripts*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "In HTML normal scripts (`<script src=\"...\">`) and deferred scripts (`<script defer=\"\" src=\"...\">`) load in document order which makes rendering these kinds of scripts deep within your component tree challenging. Async scripts (`<script async=\"\" src=\"...\">`) however will load in arbitrary order."
+		},
+		{
+			"type": "paragraph",
+			"content": "In React 19 we've included better support for async scripts by allowing you to render them anywhere in your component tree, inside the components that actually depend on the script, without having to manage relocating and deduplicating script instances."
+		},
+		{
+			"type": "code",
+			"metadataString": "js {4,15}",
+			"content": "function MyComponent() {\n  return (\n    <div>\n      <script async={true} src=\"...\" />\n      Hello World\n    </div>\n  )\n}\n\nfunction App() {\n  <html>\n    <body>\n      <MyComponent>\n      ...\n      <MyComponent> // won't lead to duplicate script in the DOM\n    </body>\n  </html>\n}"
+		},
+		{
+			"type": "paragraph",
+			"content": "In all rendering environments, async scripts will be deduplicated so that React will only load and execute the script once even if it is rendered by multiple different components."
+		},
+		{
+			"type": "paragraph",
+			"content": "In Server Side Rendering, async scripts will be included in the `<head>` and prioritized behind more critical resources that block paint such as stylesheets, fonts, and image preloads."
+		},
+		{
+			"type": "paragraph",
+			"content": "For more details, read the docs for [`<script>`](/reference/react-dom/components/script)."
+		},
+		{
+			"type": "paragraph",
+			"content": "### Support for preloading resources {/*support-for-preloading-resources*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "During initial document load and on client side updates, telling the Browser about resources that it will likely need to load as early as possible can have a dramatic effect on page performance."
+		},
+		{
+			"type": "paragraph",
+			"content": "React 19 includes a number of new APIs for loading and preloading Browser resources to make it as easy as possible to build great experiences that aren't held back by inefficient resource loading."
+		},
+		{
+			"type": "code",
+			"metadataString": "js",
+			"content": "import { prefetchDNS, preconnect, preload, preinit } from 'react-dom'\nfunction MyComponent() {\n  preinit('https://.../path/to/some/script.js', {as: 'script' }) // loads and executes this script eagerly\n  preload('https://.../path/to/font.woff', { as: 'font' }) // preloads this font\n  preload('https://.../path/to/stylesheet.css', { as: 'style' }) // preloads this stylesheet\n  prefetchDNS('https://...') // when you may not actually request anything from this host\n  preconnect('https://...') // when you will request something but aren't sure what\n}"
+		},
+		{
+			"type": "code",
+			"metadataString": "html",
+			"content": "<!-- the above would result in the following DOM/HTML -->\n<html>\n  <head>\n    <!-- links/scripts are prioritized by their utility to early loading, not call order -->\n    <link rel=\"prefetch-dns\" href=\"https://...\">\n    <link rel=\"preconnect\" href=\"https://...\">\n    <link rel=\"preload\" as=\"font\" href=\"https://.../path/to/font.woff\">\n    <link rel=\"preload\" as=\"style\" href=\"https://.../path/to/stylesheet.css\">\n    <script async=\"\" src=\"https://.../path/to/some/script.js\"></script>\n  </head>\n  <body>\n    ...\n  </body>\n</html>"
+		},
+		{
+			"type": "paragraph",
+			"content": "These APIs can be used to optimize initial page loads by moving discovery of additional resources like fonts out of stylesheet loading. They can also make client updates faster by prefetching a list of resources used by an anticipated navigation and then eagerly preloading those resources on click or even on hover."
+		},
+		{
+			"type": "paragraph",
+			"content": "For more details see [Resource Preloading APIs](/reference/react-dom#resource-preloading-apis)."
+		},
+		{
+			"type": "paragraph",
+			"content": "### Compatibility with third-party scripts and extensions {/*compatibility-with-third-party-scripts-and-extensions*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "We've improved hydration to account for third-party scripts and browser extensions."
+		},
+		{
+			"type": "paragraph",
+			"content": "When hydrating, if an element that renders on the client doesn't match the element found in the HTML from the server, React will force a client re-render to fix up the content. Previously, if an element was inserted by third-party scripts or browser extensions, it would trigger a mismatch error and client render."
+		},
+		{
+			"type": "paragraph",
+			"content": "In React 19, unexpected tags in the `<head>` and `<body>` will be skipped over, avoiding the mismatch errors. If React needs to re-render the entire document due to an unrelated hydration mismatch, it will leave in place stylesheets inserted by third-party scripts and browser extensions."
+		},
+		{
+			"type": "paragraph",
+			"content": "### Better error reporting {/*error-handling*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "We improved error handling in React 19 to remove duplication and provide options for handling caught and uncaught errors. For example, when there's an error in render caught by an Error Boundary, previously React would throw the error twice (once for the original error, then again after failing to automatically recover), and then call `console.error` with info about where the error occurred."
+		},
+		{
+			"type": "paragraph",
+			"content": "This resulted in three errors for every caught error:"
+		},
+		{
+			"type": "tag",
+			"name": "ConsoleBlockMulti",
+			"attributes": {},
+			"children": [
+				{
+					"type": "tag",
+					"name": "ConsoleLogLine",
+					"attributes": {
+						"level": "error"
+					},
+					"children": [
+						{
+							"type": "paragraph",
+							"content": "Uncaught Error: hit\n{'  '}at Throws\n{'  '}at renderWithHooks\n{'  '}..."
+						}
+					]
+				},
+				{
+					"type": "tag",
+					"name": "ConsoleLogLine",
+					"attributes": {
+						"level": "error"
+					},
+					"children": [
+						{
+							"type": "paragraph",
+							"content": "Uncaught Error: hit<span className=\"ms-2 text-gray-30\">{'    <--'} Duplicate</span>\n{'  '}at Throws\n{'  '}at renderWithHooks\n{'  '}..."
+						}
+					]
+				},
+				{
+					"type": "tag",
+					"name": "ConsoleLogLine",
+					"attributes": {
+						"level": "error"
+					},
+					"children": [
+						{
+							"type": "paragraph",
+							"content": "The above error occurred in the Throws component:\n{'  '}at Throws\n{'  '}at ErrorBoundary\n{'  '}at App{'\\n'}\nReact will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary."
+						}
+					]
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": "In React 19, we log a single error with all the error information included:"
+		},
+		{
+			"type": "tag",
+			"name": "ConsoleBlockMulti",
+			"attributes": {},
+			"children": [
+				{
+					"type": "tag",
+					"name": "ConsoleLogLine",
+					"attributes": {
+						"level": "error"
+					},
+					"children": [
+						{
+							"type": "paragraph",
+							"content": "Error: hit\n{'  '}at Throws\n{'  '}at renderWithHooks\n{'  '}...{'\\n'}\nThe above error occurred in the Throws component:\n{'  '}at Throws\n{'  '}at ErrorBoundary\n{'  '}at App{'\\n'}\nReact will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.\n{'  '}at ErrorBoundary\n{'  '}at App"
+						}
+					]
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": "Additionally, we've added two new root options to complement `onRecoverableError`:"
+		},
+		{
+			"type": "paragraph",
+			"content": "- `onCaughtError`: called when React catches an error in an Error Boundary.\n- `onUncaughtError`: called when an error is thrown and not caught by an Error Boundary.\n- `onRecoverableError`: called when an error is thrown and automatically recovered."
+		},
+		{
+			"type": "paragraph",
+			"content": "For more info and examples, see the docs for [`createRoot`](/reference/react-dom/client/createRoot) and [`hydrateRoot`](/reference/react-dom/client/hydrateRoot)."
+		},
+		{
+			"type": "paragraph",
+			"content": "### Support for Custom Elements {/*support-for-custom-elements*/}"
+		},
+		{
+			"type": "paragraph",
+			"content": "React 19 adds full support for custom elements and passes all tests on [Custom Elements Everywhere](https://custom-elements-everywhere.com/)."
+		},
+		{
+			"type": "paragraph",
+			"content": "In past versions, using Custom Elements in React has been difficult because React treated unrecognized props as attributes rather than properties. In React 19, we've added support for properties that works on the client and during SSR with the following strategy:"
+		},
+		{
+			"type": "paragraph",
+			"content": "- **Server Side Rendering**: props passed to a custom element will render as attributes if their type is a primitive value like `string`, `number`, or the value is `true`. Props with non-primitive types like `object`, `symbol`, `function`, or value `false` will be omitted.\n- **Client Side Rendering**: props that match a property on the Custom Element instance will be assigned as properties, otherwise they will be assigned as attributes."
+		},
+		{
+			"type": "paragraph",
+			"content": "Thanks to [Joey Arhar](https://github.com/josepharhar) for driving the design and implementation of Custom Element support in React."
+		},
+		{
+			"type": "paragraph",
+			"content": "#### How to upgrade {/*how-to-upgrade*/}\nSee the [React 19 Upgrade Guide](/blog/2024/04/25/react-19-upgrade-guide) for step-by-step instructions and a full list of breaking and notable changes."
+		}
+	]
+}

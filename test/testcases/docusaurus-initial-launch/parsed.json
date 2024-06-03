@@ -1,0 +1,171 @@
+{
+	"nodes": [
+		{
+			"type": "frontmatter",
+			"attributes": {
+				"title": "Introducing Docusaurus",
+				"authors": "JMarcey",
+				"tags": ["documentation", "blog", "docusaurus"]
+			}
+		},
+		{
+			"type": "paragraph",
+			"content": "![](/img/slash-introducing.svg)"
+		},
+		{
+			"type": "paragraph",
+			"content": "We are very happy to introduce [Docusaurus](https://github.com/facebook/docusaurus) to help you manage one or many open source websites."
+		},
+		{
+			"type": "paragraph",
+			"content": "We created [Docusaurus](https://docusaurus.io) for the following reasons:"
+		},
+		{
+			"type": "paragraph",
+			"content": "1. To put the focus on writing good documentation instead of worrying about the infrastructure of a website.\n1. To provide features that many of our open source websites need like blog support, search and versioning.\n1. To make it easy to push updates, new features, and bug fixes to everyone all at once.\n1. And, finally, to provide a consistent look and feel across all of our open source projects."
+		},
+		{
+			"type": "paragraph",
+			"content": "<!--truncate-->"
+		},
+		{
+			"type": "paragraph",
+			"content": "Docusaurus is a tool designed to make it easy for teams to publish documentation websites without having to worry about the infrastructure and design details. At its core, all a user has to provide are documentation files written in Markdown, customization of a provided home page written in React, and a few configuration modifications. Docusaurus handles the rest by providing default styles, site formatting, and simple document navigation. Getting started is easy, as users can [install](https://v1.docusaurus.io/docs/en/installation.html) it using `npm` or `yarn` via a simple initialization script that [creates a working example website out of the box](https://v1.docusaurus.io/docs/en/site-preparation.html)."
+		},
+		{
+			"type": "paragraph",
+			"content": "Docusaurus also provides core website and documentation features out-of-the-box including [blog support](https://v1.docusaurus.io/docs/en/blog.html), [internationalization](https://v1.docusaurus.io/docs/en/translation.html), [search](https://v1.docusaurus.io/docs/en/search.html), and [versioning](https://v1.docusaurus.io/docs/en/versioning.html). While some projects may not require any of these features, enabling them is generally a matter of updating configuration options instead of having to add the infrastructure from the ground up. As more features get added to Docusaurus, users just can easily update to the latest version. This can be done by simply running npm or yarn update and updating configuration options. Users or teams will no longer need to manually rework their entire website infrastructure each time a new feature gets added."
+		},
+		{
+			"type": "paragraph",
+			"content": "## The Birth of docusaurus"
+		},
+		{
+			"type": "paragraph",
+			"content": "![](/img/slash-birth.png)"
+		},
+		{
+			"type": "paragraph",
+			"content": "When Facebook first started their open source program, many teams implemented a custom website for each of their open source projects. This approach presented challenges when the open source program team was asked to help the project teams improve their documentation. Since each site was unique, adding basic infrastructure such as a blog, consistent navigation, search, etc. became challenging undertakings."
+		},
+		{
+			"type": "paragraph",
+			"content": "The open source team tried to help mitigate this problem by coming up with a standard template, based on Jekyll, that could be used as a starting point for a project website. We asked our new projects to manually copy our template source to their repo, write their docs, and publish. This template approach was adopted by most of open source projects launched; some existing projects even converted their custom website implementations to the new template as well."
+		},
+		{
+			"type": "paragraph",
+			"content": "The problem with the \"copy the template to your repo\" approach is that, even though the platform is consistent, pushing updates becomes unmaintainable across an entire suite of projects already using the template. This is because we lost control of the template after a project copied it to their repo. Projects were free to modify the template as desired and apply their own project-specific features to it. So while projects share the same site generation platform, they have now diverted enough where they cannot take advantage of the new features we have added to the template over time. There was no easy way we could ask all current projects to \"copy\" a new version of the template since it might break their existing site or remove features that they have added on their own. Instead, we would have to apply the updates manually to each project one-by-one. This became very problematic when projects started asking for our team for internationalization support within the template, requiring low-level changes to how the template was structured and generated."
+		},
+		{
+			"type": "paragraph",
+			"content": "So we started thinking about what we could do to help mitigate the challenge of keeping sites updated and consistent across our entire portfolio. We also wanted multiple projects to share the same site generation software. We wanted them to start out with the same template, and yet have the flexibility to customize and adapt their site theme to suit their needs. They should be able to extend and customize their site, but when we update the underlying infrastructure with fixes and features, the project should be able update simply and without any breaking changes."
+		},
+		{
+			"type": "paragraph",
+			"content": "Docusaurus was born!"
+		},
+		{
+			"type": "paragraph",
+			"content": "At Facebook, Docusaurus allows us to quickly get different projects up and running with documentation websites, especially for teams who don't have much experience with web development or primarily want a basic site to showcase their project. Docusaurus already supports sites needing more advanced features like internationalization for Jest and versioning for React Native. As different projects request new features for their sites, they are added to Docusaurus and simultaneously provided to all projects! All together, this ends up greatly reducing the work needed to maintain different sites for different projects. Our teams are able to focus on keeping their projects healthier by spending more time adding features, fixing bugs, and writing documentation."
+		},
+		{
+			"type": "paragraph",
+			"content": "## Getting Up and Running"
+		},
+		{
+			"type": "paragraph",
+			"content": "![](/img/slash-up-and-running.png)"
+		},
+		{
+			"type": "paragraph",
+			"content": "At its core, we wanted sites running Docusaurus to be simple to use. With one [installation](https://v1.docusaurus.io/docs/en/installation.html) command and some simple [configuration](https://v1.docusaurus.io/docs/en/site-preparation.html), you can actually have a default running website."
+		},
+		{
+			"type": "paragraph",
+			"content": "When you run `docusaurus-init`, you will see a structure similar to:"
+		},
+		{
+			"type": "code",
+			"metadataString": "bash",
+			"content": "root-of-repo\n├── docs-examples-from-docusaurus\n│   ├── doc1.md\n│   ├── doc2.md\n│   ├── doc3.md\n│   ├── example-doc4.md\n│   └── example-doc5.md\n├── website\n│   ├── blog-examples-from-docusaurus\n│   │   ├── 2016-03-11-blog-post.md\n│   │   └── 2017-04-10-blog-post-two.md\n│   ├── core\n│   │   └── Footer.js\n│   ├── node_modules\n│   ├── package.json\n│   ├── pages\n│   ├── sidebars.json\n│   ├── siteConfig.js\n│   └── static"
+		},
+		{
+			"type": "paragraph",
+			"content": "With the exception of node_modules and package.json, all the directories and files you see are where you customize and add content to your Docusaurus-based website. The docs folder is where you add your Markdown that represents your documentation; the blog folder is where you add your Markdown for your [blog posts](https://v1.docusaurus.io/docs/en/blog.html); `siteConfig.js` is where you make most of the [customizations](https://v1.docusaurus.io/docs/en/site-config.html) for your site; `sidebars.json` is where you maintain the layout and content of the [sidebar](https://v1.docusaurus.io/docs/en/navigation.html) for your documentation; the `pages` folder is where you add [custom](https://v1.docusaurus.io/docs/en/custom-pages.html) pages for your site; the `static` folder is where all of your static assets go (e.g., CSS stylesheets and images); and the `core` folder is where you can customize core components of the site, in this case the footer."
+		},
+		{
+			"type": "paragraph",
+			"content": "## How does Docusaurus work?"
+		},
+		{
+			"type": "paragraph",
+			"content": "Docusaurus is written primarily in JavaScript and [React](https://facebook.github.io/react), replacing Jekyll which we used in the old template. We use [Remarkable](https://github.com/jonschlinkert/remarkable) for our Markdown rendering and [highlight.js](https://highlightjs.org/) for our code block syntax highlighting. The core of Docusaurus' functionality is in the [lib directory](https://github.com/facebookexperimental/Docusaurus/tree/master/lib) of the [Docusaurus repo](https://github.com/facebook/docusaurus/). The general structure looks like:"
+		},
+		{
+			"type": "code",
+			"metadataString": "bash",
+			"content": "root-of-Docusaurus\n├── lib\n│   ├── core\n│   ├── server\n│   │   ├── generate.js\n│   │   ├── server.js\n│   │   └── ...and more files\n│   ├── static\n│   ├── build-files.js\n│   ├── copy-examples.js\n│   ├── generate-feed.js\n│   ├── publish-gh-pages.js\n│   ├── rename-version.js\n│   ├── start-server.js\n│   ├── versions.js\n│   └── write-translations.js"
+		},
+		{
+			"type": "paragraph",
+			"content": "The key files here are build-files.js and start-server.js. There are many similarities between these two files: `build-files.js` is used to build the physical artifacts for serving by an external web server. `start-server.js` is used to run the Docusaurus server and locally test your site. Both go through the following general process to take all of the Markdown and configuration to create a runnable website:"
+		},
+		{
+			"type": "paragraph",
+			"content": "1. Process your website settings in `siteConfig.js`\n1. Read the document metadata that exists in all the Markdown files in your docs directory.\n1. Create a table of contents for your documents based upon the IDs extracted from the metadata.\n1. Convert the Markdown to HTML, including doing link replacement.\n1. These files will go in a build/docs directory of the compiled site, and any translated versions will go into a language specific folder within the build/docs folder.\n1. Repeat 1-3 for blog posts.\n1. The blog file will go in a build/blog directory of the compiled site.\n1. Read the main.css file and concatenate any user-defined css into master css file that will be in the build/css directory of the compiled site.\n1. Copy images into an build/img directory of the compiled site.\n1. Take any custom pages that were added to the pages folder of the site and compile/copy those into the root build directory of the compiled site. Any translated versions will go into a language specific folder within build.\n1. Create CNAME and sitemap.xml files and add those to build."
+		},
+		{
+			"type": "paragraph",
+			"content": "Note that this process does not take into full account how translations or versioning works. The underlying details of those features will be saved for future blog posts."
+		},
+		{
+			"type": "paragraph",
+			"content": "The final structure of your compiled site will look similar to:"
+		},
+		{
+			"type": "code",
+			"metadataString": "bash",
+			"content": "build\n├── website\n│   ├── CNAME\n│   ├── blog\n│   ├── css\n│   ├── docs\n│   ├── en\n│   ├── help.html # custom page\n│   ├── img\n│   ├── index.html # landing page\n│   ├── sitemap.xml\n│   └── users.html # custom page"
+		},
+		{
+			"type": "paragraph",
+			"content": "## Community"
+		},
+		{
+			"type": "paragraph",
+			"content": "![](/img/docusaurus.svg)"
+		},
+		{
+			"type": "paragraph",
+			"content": "We welcome your [contributions](https://github.com/facebook/docusaurus/blob/master/CONTRIBUTING.md) to Docusaurus, whether you want to use it for your own site, you want to [contribute](https://github.com/facebook/docusaurus/blob/master/CONTRIBUTING.md) to the Docusaurus core or just have questions. Follow us on [GitHub](https://github.com/facebook/docusaurus) and [Twitter](https://twitter.com/docusaurus)."
+		},
+		{
+			"type": "paragraph",
+			"content": "## Acknowledgements"
+		},
+		{
+			"type": "paragraph",
+			"content": "Docusaurus wouldn't exist without the work of the rest of the core Docusaurus team: [Eric Nakagawa](http://twitter.com/ericnakagawa), [Hector Ramos](https://twitter.com/hectorramos), [Eric Vicenti](https://twitter.com/EricVicenti) and [Frank Li](https://github.com/deltice) — a former intern at Facebook who implemented the core technology and features."
+		},
+		{
+			"type": "paragraph",
+			"content": "Special thanks also goes out to our earliest [adopters](https://v1.docusaurus.io/en/users.html) of Docusaurus:"
+		},
+		{
+			"type": "paragraph",
+			"content": "- [BuckleScript](https://bucklescript.github.io/)\n- [FastText](https://fasttext.cc)\n- [Jest](https://jestjs.io)\n- [Make It Open](http://makeitopen.com)\n- [Prettier](https://prettier.io/)\n- [Reason-react](https://reasonml.github.io/reason-react/)\n- [React Native](https://facebook.github.io/react-native/)\n- [Relay](https://facebook.github.io/relay/)"
+		},
+		{
+			"type": "paragraph",
+			"content": "Without their dedication to creating or migrating their websites over to the platform, we would have not have been in the position where we are today."
+		},
+		{
+			"type": "paragraph",
+			"content": "## Resources"
+		},
+		{
+			"type": "paragraph",
+			"content": "- [Read our documentation](https://v1.docusaurus.io)\n- [Follow our Twitter feed](https://twitter.com/docusaurus)\n- [Follow us on GitHub](https://github.com/facebook/docusaurus)\n- [About Slash, the Docusaurus mascot](https://v1.docusaurus.io/about-slash.html)"
+		}
+	]
+}
