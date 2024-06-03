@@ -14,7 +14,12 @@ describe('correctly parse', async () => {
       const expectedText = await expected.text()
       const parsed = parse(sourceText)
       const expectedParsed = JSON.parse(expectedText)
-      expect(parsed).toEqual(expectedParsed)
+      try {
+        expect(parsed).toEqual(expectedParsed)
+      } catch (e) {
+        await Bun.write(join(testFolder, folder, 'parsed.json'), JSON.stringify(parsed, null, 2))
+        throw e
+      }
     })
   }
 })
