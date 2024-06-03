@@ -26,6 +26,10 @@
     "bun-plugin-dts": "^0.2.3",
     "@types/bun": "latest",
     "typescript": "^5.4.5",
-    "@biomejs/biome": "^1.7.3"
+    "@biomejs/biome": "^1.7.3",
+    "@types/js-yaml": "^4.0.9"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
   }
 }
