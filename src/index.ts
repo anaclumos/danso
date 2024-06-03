@@ -14,18 +14,22 @@ export const parse = (input: string): AST => {
 
   input = input.trim()
 
-  while (input.length > 0) {
-    if (input.startsWith('---')) {
-      // Parse frontmatter
-      const frontmatterEnd = input.indexOf('---', 3)
+  // Parse frontmatter
+  if (input.startsWith('---')) {
+    const frontmatterEnd = input.indexOf('\n---\n')
+    if (frontmatterEnd !== -1) {
       const frontmatter = input.slice(3, frontmatterEnd)
       const frontmatterNode: FrontmatterNode = {
         type: NodeType.Frontmatter,
         attributes: YAML.load(frontmatter) || {},
       }
       nodes.push(frontmatterNode)
-      input = input.slice(frontmatterEnd + 3)
-    } else if (input.startsWith('<')) {
+      input = input.slice(frontmatterEnd + 5)
+    }
+  }
+
+  while (input.length > 0) {
+    if (input.startsWith('<')) {
       // Parse tags
       const tagRegex = /<(\w+)([^>]*)>(?:([\s\S]*?)<\/\1>)?\s*|<(\w+)([^>]*)\/>\s*/
       const match = tagRegex.exec(input)
