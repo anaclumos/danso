@@ -12,12 +12,6 @@
     "bump": "pnpm version patch -m 'Bump version to %s'",
     "release": "bun bump && bun format && pnpm publish"
   },
-  "files": [
-    "dist"
-  ],
-  "keywords": [
-    "bun"
-  ],
   "license": "MIT",
   "homepage": "https://github.com/anaclumos/danso#readme",
   "repository": {
