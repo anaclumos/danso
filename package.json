@@ -1,6 +1,6 @@
 {
   "name": "danso",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "description": "",
@@ -12,8 +12,12 @@
     "bump": "pnpm version patch -m 'Bump version to %s'",
     "release": "pnpm run bump && git push --follow-tags && gh release create $(git describe --tags --abbrev=0) -F CHANGELOG.md"
   },
-  "files": ["dist"],
-  "keywords": ["bun"],
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "bun"
+  ],
   "license": "MIT",
   "homepage": "https://github.com/anaclumos/danso#readme",
   "repository": {
