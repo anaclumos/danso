@@ -1,3 +1,2 @@
-bunx @biomejs/biome format .
+bun format
 bun test
-
