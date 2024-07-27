@@ -10,14 +10,10 @@
     "prepare": "husky",
     "format": "biome format --write .",
     "bump": "pnpm version patch -m 'Bump version to %s'",
-    "release": "pnpm run bump && git push --follow-tags && pnpm publish && gh release create $(git describe --tags --abbrev=0) -F CHANGELOG.md"
+    "release": "bun bump && bun format &&  git push --follow-tags --signed && pnpm publish && gh release create $(git describe --tags --abbrev=0) -F CHANGELOG.md"
   },
-  "files": [
-    "dist"
-  ],
-  "keywords": [
-    "bun"
-  ],
+  "files": ["dist"],
+  "keywords": ["bun"],
   "license": "MIT",
   "homepage": "https://github.com/anaclumos/danso#readme",
   "repository": {
