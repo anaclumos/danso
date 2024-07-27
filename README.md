@@ -4,7 +4,7 @@ DANSO is a specialized markdown parser designed to enhance the performance of La
 
 ## Key Features
 
-- **Shallow Parsing**: DANSO performs a shallow parsing of markdown elements, categorizing them into frontmatter, MDX/HTML tags, code blocks, and paragraphs. This allows LLMs to better understand the structure and context of the document.
+- **Shallow Parsing**: DANSO performs a shallow parsing of markdown elements, categorizing them into frontmatter, MDX/HTML tags, code blocks, headers, and paragraphs. This allows LLMs to better understand the structure and context of the document.
 - **Targeted Logic**: Each type of parsed entity undergoes corresponding processing logic, ensuring that only the necessary parts are processed while preserving the structure and functionality of the document.
 - **Frontmatter Handling**: DANSO identifies and processes only the string values in the frontmatter, such as `title` and `description`, keeping the frontmatter structure intact.
 - **MDX/HTML Tag Preservation**: The parser recognizes MDX and HTML tags and processes only the inner strings, preserving the tags and their functionality.
