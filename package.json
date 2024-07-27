@@ -1,6 +1,6 @@
 {
   "name": "danso",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "description": "",
@@ -8,7 +8,9 @@
     "build": "bun run build.ts",
     "prepublishOnly": "bun run build",
     "prepare": "husky",
-    "format": "biome format --write ."
+    "format": "biome format --write .",
+    "bump": "pnpm version patch -m 'Bump version to %s'",
+    "release": "pnpm run bump && git push --follow-tags && gh release create $(git describe --tags --abbrev=0) -F CHANGELOG.md"
   },
   "files": ["dist"],
   "keywords": ["bun"],
