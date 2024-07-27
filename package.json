@@ -10,7 +10,7 @@
     "prepare": "husky",
     "format": "biome format --write .",
     "bump": "pnpm version patch -m 'Bump version to %s'",
-    "release": "pnpm run bump && git push --follow-tags && gh release create $(git describe --tags --abbrev=0) -F CHANGELOG.md"
+    "release": "pnpm run bump && git push --follow-tags && pnpm publish && gh release create $(git describe --tags --abbrev=0) -F CHANGELOG.md"
   },
   "files": ["dist"],
   "keywords": ["bun"],
