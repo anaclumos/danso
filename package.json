@@ -1,6 +1,6 @@
 {
   "name": "danso",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "description": "",
@@ -12,8 +12,12 @@
     "bump": "pnpm version patch -m 'Bump version to %s'",
     "release": "bun bump && bun format && pnpm publish"
   },
-  "files": ["dist"],
-  "keywords": ["bun"],
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "bun"
+  ],
   "license": "MIT",
   "homepage": "https://github.com/anaclumos/danso#readme",
   "repository": {
