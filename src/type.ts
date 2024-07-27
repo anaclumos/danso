@@ -1,4 +1,4 @@
-export enum NodeType {
+export enum DansoNodeType {
   Frontmatter = "frontmatter",
   Tag = "tag",
   Code = "code",
@@ -6,46 +6,46 @@ export enum NodeType {
   Header = "header",
 }
 
-export type BaseNode = {
-  type: NodeType
+export type DansoBaseNode = {
+  type: DansoNodeType
 }
 
-export type FrontmatterNode = BaseNode & {
-  type: NodeType.Frontmatter
+export type DansoFrontmatterNode = DansoBaseNode & {
+  type: DansoNodeType.Frontmatter
   attributes: Record<string, unknown>
 }
 
-export type TagNode = BaseNode & {
-  type: NodeType.Tag
+export type DansoTagNode = DansoBaseNode & {
+  type: DansoNodeType.Tag
   name: string
   attributes: Record<string, string>
-  children: Node[]
+  children: DansoNode[]
 }
 
-export type CodeNode = BaseNode & {
-  type: NodeType.Code
+export type DansoCodeNode = DansoBaseNode & {
+  type: DansoNodeType.Code
   metadataString: string
   content: string
 }
 
-export type ParagraphNode = BaseNode & {
-  type: NodeType.Paragraph
+export type DansoParagraphNode = DansoBaseNode & {
+  type: DansoNodeType.Paragraph
   content: string
 }
 
-export type HeaderNode = BaseNode & {
-  type: NodeType.Header
+export type DansoHeaderNode = DansoBaseNode & {
+  type: DansoNodeType.Header
   level: number
   content: string
 }
 
-export type Node =
-  | FrontmatterNode
-  | TagNode
-  | CodeNode
-  | ParagraphNode
-  | HeaderNode
+export type DansoNode =
+  | DansoFrontmatterNode
+  | DansoTagNode
+  | DansoCodeNode
+  | DansoParagraphNode
+  | DansoHeaderNode
 
 export type AST = {
-  nodes: Node[]
+  nodes: DansoNode[]
 }

@@ -2,29 +2,29 @@ import YAML from "js-yaml"
 
 import {
   type AST,
-  type CodeNode,
-  type FrontmatterNode,
-  type Node,
-  NodeType,
-  type ParagraphNode,
-  type TagNode,
-  type HeaderNode,
+  type DansoCodeNode,
+  type DansoFrontmatterNode,
+  type DansoNode,
+  DansoNodeType,
+  type DansoParagraphNode,
+  type DansoTagNode,
+  type DansoHeaderNode,
 } from "./type"
 
-export const parse = (input: string): AST => {
-  const nodes: Node[] = []
-  input = input.trim()
+export const parse = (i: string): AST => {
+  const nodes: DansoNode[] = []
+  let input = i.trim()
 
   // Parse frontmatter
   if (input.startsWith("---")) {
     const frontmatterEnd = input.indexOf("\n---\n")
     if (frontmatterEnd !== -1) {
       const frontmatter = input.slice(3, frontmatterEnd)
-      const frontmatterNode: FrontmatterNode = {
-        type: NodeType.Frontmatter,
+      const DansofrontmatterNode: DansoFrontmatterNode = {
+        type: DansoNodeType.Frontmatter,
         attributes: YAML.load(frontmatter) as Record<string, unknown>,
       }
-      nodes.push(frontmatterNode)
+      nodes.push(DansofrontmatterNode)
       input = input.slice(frontmatterEnd + 5)
     }
   }
@@ -37,8 +37,8 @@ export const parse = (input: string): AST => {
       if (match) {
         const [fullMatch, hashPrefix, content] = match
         const level = hashPrefix.length
-        const headerNode: HeaderNode = {
-          type: NodeType.Header,
+        const headerNode: DansoHeaderNode = {
+          type: DansoNodeType.Header,
           level,
           content: content.trim(),
         }
@@ -52,8 +52,8 @@ export const parse = (input: string): AST => {
       if (match) {
         const [fullMatch, content, underline] = match
         const level = underline[0] === "=" ? 1 : 2
-        const headerNode: HeaderNode = {
-          type: NodeType.Header,
+        const headerNode: DansoHeaderNode = {
+          type: DansoNodeType.Header,
           level,
           content: content.trim(),
         }
@@ -81,14 +81,14 @@ export const parse = (input: string): AST => {
           ? selfClosingAttributesString
           : attributesString
         let attributeMatch: RegExpExecArray | null
-        while (
-          (attributeMatch = attributeRegex.exec(attributesStringToUse)) !== null
-        ) {
+        while (true) {
+          attributeMatch = attributeRegex.exec(attributesStringToUse)
+          if (attributeMatch === null) break
           const [, key, value] = attributeMatch
           attributes[key] = value
         }
-        const tagNode: TagNode = {
-          type: NodeType.Tag,
+        const tagNode: DansoTagNode = {
+          type: DansoNodeType.Tag,
           name: selfClosingTagName || tagName,
           attributes,
           children: content ? parse(content).nodes : [],
@@ -100,8 +100,8 @@ export const parse = (input: string): AST => {
         const paragraphEnd = input.indexOf("\n\n")
         const paragraphContent =
           paragraphEnd !== -1 ? input.slice(0, paragraphEnd) : input
-        const paragraphNode: ParagraphNode = {
-          type: NodeType.Paragraph,
+        const paragraphNode: DansoParagraphNode = {
+          type: DansoNodeType.Paragraph,
           content: paragraphContent.trim(),
         }
         nodes.push(paragraphNode)
@@ -113,12 +113,12 @@ export const parse = (input: string): AST => {
       const match = codeBlockRegex.exec(input)
       if (match) {
         const [fullMatch, metadataString, content] = match
-        const codeNode: CodeNode = {
-          type: NodeType.Code,
+        const DansocodeNode: DansoCodeNode = {
+          type: DansoNodeType.Code,
           metadataString: metadataString.trim(),
           content: content.trim(),
         }
-        nodes.push(codeNode)
+        nodes.push(DansocodeNode)
         input = input.slice(fullMatch.length)
       }
     } else {
@@ -126,8 +126,8 @@ export const parse = (input: string): AST => {
       const paragraphEnd = input.indexOf("\n\n")
       const paragraphContent =
         paragraphEnd !== -1 ? input.slice(0, paragraphEnd) : input
-      const paragraphNode: ParagraphNode = {
-        type: NodeType.Paragraph,
+      const paragraphNode: DansoParagraphNode = {
+        type: DansoNodeType.Paragraph,
         content: paragraphContent.trim(),
       }
       nodes.push(paragraphNode)
@@ -146,12 +146,12 @@ export const compile = (ast: AST): string => {
 
   for (const node of ast.nodes) {
     switch (node.type) {
-      case NodeType.Frontmatter:
+      case DansoNodeType.Frontmatter:
         output += "---\n"
         output += YAML.dump(node.attributes)
         output += "---\n"
         break
-      case NodeType.Tag:
+      case DansoNodeType.Tag:
         output += `<${node.name}`
         for (const [key, value] of Object.entries(node.attributes)) {
           output += ` ${key}="${value}"`
@@ -165,18 +165,18 @@ export const compile = (ast: AST): string => {
         }
         output += "\n"
         break
-      case NodeType.Code:
+      case DansoNodeType.Code:
         output += "```"
         output += node.metadataString
         output += "\n"
         output += node.content
         output += "\n```\n"
         break
-      case NodeType.Paragraph:
+      case DansoNodeType.Paragraph:
         output += node.content
         output += "\n\n"
         break
-      case NodeType.Header:
+      case DansoNodeType.Header:
         if (node.level === 1) {
           output += node.content
           output += "\n"
@@ -188,7 +188,7 @@ export const compile = (ast: AST): string => {
           output += "-".repeat(node.content.length)
           output += "\n\n"
         } else {
-          output += "#".repeat(node.level) + " "
+          output += `${"#".repeat(node.level)} `
           output += node.content
           output += "\n\n"
         }
